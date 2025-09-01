@@ -1,7 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-int _isupper(int c);
-int _isdigit(int c);
+int _putchar(char c);
+int mul(int a, int b); /* <<--- هذا هو البروتوتايب الجديد */
 
 #endif /* MAIN_H */
