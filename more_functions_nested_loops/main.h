@@ -2,6 +2,7 @@
 #define MAIN_H
 
 int _putchar(char c);
-int mul(int a, int b); /* <<--- هذا هو البروتوتايب الجديد */
+int mul(int a, int b);
+void print_numbers(void);
 
 #endif /* MAIN_H */
