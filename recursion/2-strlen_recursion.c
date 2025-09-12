@@ -8,7 +8,8 @@
  */
 int _strlen_recursion(char *s)
 {
-    if (*s == '\0')      /* شرط التوقف عند نهاية النص */
-        return (0);
-    return (1 + _strlen_recursion(s + 1)); /* استدعاء الدالة على باقي النص */
+	if (*s == '\0')
+		return (0);
+
+	return (1 + _strlen_recursion(s + 1));
 }
