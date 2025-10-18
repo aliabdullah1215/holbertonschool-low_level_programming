@@ -46,14 +46,13 @@ int main(int ac, char **av)
 	{
 		r = read(fd_from, buf, BUF_SIZE);
 
-		/* إذا فشلت القراءة فوراً، اخرج بكود 98 ولا تكتب شيئاً */
 		if (r == -1)
 		{
 			safe_close(fd_from);
 			safe_close(fd_to);
 			print_error(98, "Error: Can't read from file %s\n", av[1]);
 		}
-		/* انتهاء الملف */
+
 		if (r == 0)
 			break;
 
@@ -70,4 +69,3 @@ int main(int ac, char **av)
 	safe_close(fd_to);
 	return (0);
 }
-
