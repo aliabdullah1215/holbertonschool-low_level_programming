@@ -5,10 +5,10 @@
 #define BUF_SIZE 1024
 
 /**
- * print_error - Prints an error message to stderr and exits
+ * print_error - Print error message to stderr and exit with code
  * @code: Exit code
  * @msg: Error message format
- * @arg: String argument for the message
+ * @arg: Argument (filename or fd)
  */
 void print_error(int code, const char *msg, const char *arg)
 {
@@ -17,8 +17,8 @@ void print_error(int code, const char *msg, const char *arg)
 }
 
 /**
- * safe_close - Closes a file descriptor safely
- * @fd: File descriptor to close
+ * safe_close - Close a file descriptor safely
+ * @fd: The file descriptor
  */
 void safe_close(int fd)
 {
@@ -30,7 +30,7 @@ void safe_close(int fd)
 }
 
 /**
- * copy_file - Copies content from one file to another
+ * copy_file - Copy content from one file to another
  * @src: Source file name
  * @dest: Destination file name
  */
@@ -51,21 +51,22 @@ void copy_file(const char *src, const char *dest)
 		print_error(99, "Error: Can't write to %s\n", dest);
 	}
 
-	while ((r = read(fd_from, buf, BUF_SIZE)) > 0)
+	while ((r = read(fd_from, buf, BUF_SIZE)) != 0)
 	{
+		if (r == -1)
+		{
+			safe_close(fd_from);
+			safe_close(fd_to);
+			print_error(98, "Error: Can't read from file %s\n", src);
+		}
+
 		w = write(fd_to, buf, r);
-		if (w != r)
+		if (w == -1 || w != r)
 		{
 			safe_close(fd_from);
 			safe_close(fd_to);
 			print_error(99, "Error: Can't write to %s\n", dest);
 		}
-	}
-	if (r == -1)
-	{
-		safe_close(fd_from);
-		safe_close(fd_to);
-		print_error(98, "Error: Can't read from file %s\n", src);
 	}
 
 	safe_close(fd_from);
@@ -73,7 +74,7 @@ void copy_file(const char *src, const char *dest)
 }
 
 /**
- * main - Entry point, checks args and runs copy_file
+ * main - Entry point for cp program
  * @ac: Argument count
  * @av: Argument vector
  *
@@ -86,6 +87,7 @@ int main(int ac, char **av)
 		dprintf(STDERR_FILENO, "Usage: cp file_from file_to\n");
 		exit(97);
 	}
+
 	copy_file(av[1], av[2]);
 	return (0);
 }
