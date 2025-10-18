@@ -1,23 +1,16 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <elf.h>
 
-/* _putchar function */
-int _putchar(char c);
+void print_error(const char *msg);
+void print_magic(unsigned char *e_ident);
+void print_class(unsigned char *e_ident);
+void print_data(unsigned char *e_ident);
+void print_header_info(Elf64_Ehdr *h);
 
-/* Task 0: Read text file */
-ssize_t read_textfile(const char *filename, size_t letters);
-
-/* Task 1: Create a file */
-int create_file(const char *filename, char *text_content);
-
-/* Task 2: Append text to a file */
-int append_text_to_file(const char *filename, char *text_content);
-
-#endif
+#endif /* MAIN_H */
