@@ -4,22 +4,22 @@
 #define BUFFER_SIZE 1024
 
 /**
- * print_error - prints an error message to stderr and exits
+ * print_error - print formatted error to stderr then exit
  * @code: exit status
- * @msg: format string for error message
- * @arg: argument to insert into the message
+ * @fmt:  printf-like format string
+ * @arg:  single argument inserted into @fmt
  */
-void print_error(int code, const char *msg, const char *arg)
+static void print_error(int code, const char *fmt, const char *arg)
 {
-	dprintf(STDERR_FILENO, msg, arg);
+	dprintf(STDERR_FILENO, fmt, arg);
 	exit(code);
 }
 
 /**
- * close_fd - closes a file descriptor and handles errors
+ * close_fd - close fd and handle error
  * @fd: file descriptor
  */
-void close_fd(int fd)
+static void close_fd(int fd)
 {
 	if (close(fd) == -1)
 	{
@@ -29,14 +29,14 @@ void close_fd(int fd)
 }
 
 /**
- * copy_file - copies the content of one file to another
- * @file_from: name of source file
- * @file_to: name of destination file
+ * copy_file - copy file_from -> file_to using a 1024B buffer
+ * @file_from: source path
+ * @file_to: destination path
  */
-void copy_file(const char *file_from, const char *file_to)
+static void copy_file(const char *file_from, const char *file_to)
 {
 	int fd_from, fd_to;
-	ssize_t rbytes, wbytes;
+	ssize_t rbytes;
 	char buf[BUFFER_SIZE];
 
 	fd_from = open(file_from, O_RDONLY);
@@ -50,24 +50,36 @@ void copy_file(const char *file_from, const char *file_to)
 		print_error(99, "Error: Can't write to %s\n", file_to);
 	}
 
-	while (1)
+	for (;;)
 	{
+		/* 1) اقرأ */
 		rbytes = read(fd_from, buf, BUFFER_SIZE);
 		if (rbytes == -1)
 		{
+			/* فشل القراءة → 98 (ولا نحاول أي كتابة) */
 			close_fd(fd_from);
 			close_fd(fd_to);
 			print_error(98, "Error: Can't read from file %s\n", file_from);
 		}
 		if (rbytes == 0)
-			break;
+			break; /* EOF */
 
-		wbytes = write(fd_to, buf, rbytes);
-		if (wbytes == -1 || wbytes != rbytes)
+		/* 2) اكتب كل ما قرأته (التعامل مع الكتابة الجزئية) */
 		{
-			close_fd(fd_from);
-			close_fd(fd_to);
-			print_error(99, "Error: Can't write to %s\n", file_to);
+			ssize_t written = 0;
+
+			while (written < rbytes)
+			{
+				ssize_t w = write(fd_to, buf + written, rbytes - written);
+
+				if (w == -1)
+				{
+					close_fd(fd_from);
+					close_fd(fd_to);
+					print_error(99, "Error: Can't write to %s\n", file_to);
+				}
+				written += w;
+			}
 		}
 	}
 
@@ -76,10 +88,9 @@ void copy_file(const char *file_from, const char *file_to)
 }
 
 /**
- * main - copies the content of a file to another file
- * @ac: argument count
- * @av: argument vector
- *
+ * main - cp file_from file_to
+ * @ac: argc
+ * @av: argv
  * Return: 0 on success
  */
 int main(int ac, char **av)
