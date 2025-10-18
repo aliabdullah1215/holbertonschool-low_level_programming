@@ -6,8 +6,8 @@
 /**
  * print_error - prints an error message to stderr and exits
  * @code: exit status
- * @msg: message format string
- * @arg: argument for message
+ * @msg: format string for error message
+ * @arg: argument to insert into the message
  */
 void print_error(int code, const char *msg, const char *arg)
 {
@@ -16,7 +16,7 @@ void print_error(int code, const char *msg, const char *arg)
 }
 
 /**
- * close_fd - closes a file descriptor and checks for errors
+ * close_fd - closes a file descriptor and handles errors
  * @fd: file descriptor
  */
 void close_fd(int fd)
@@ -30,8 +30,8 @@ void close_fd(int fd)
 
 /**
  * copy_file - copies the content of one file to another
- * @file_from: source file name
- * @file_to: destination file name
+ * @file_from: name of source file
+ * @file_to: name of destination file
  */
 void copy_file(const char *file_from, const char *file_to)
 {
@@ -50,21 +50,25 @@ void copy_file(const char *file_from, const char *file_to)
 		print_error(99, "Error: Can't write to %s\n", file_to);
 	}
 
-	while ((rbytes = read(fd_from, buf, BUFFER_SIZE)) > 0)
+	while (1)
 	{
+		rbytes = read(fd_from, buf, BUFFER_SIZE);
+		if (rbytes == -1)
+		{
+			close_fd(fd_from);
+			close_fd(fd_to);
+			print_error(98, "Error: Can't read from file %s\n", file_from);
+		}
+		if (rbytes == 0)
+			break;
+
 		wbytes = write(fd_to, buf, rbytes);
-		if (wbytes != rbytes)
+		if (wbytes == -1 || wbytes != rbytes)
 		{
 			close_fd(fd_from);
 			close_fd(fd_to);
 			print_error(99, "Error: Can't write to %s\n", file_to);
 		}
-	}
-	if (rbytes == -1)
-	{
-		close_fd(fd_from);
-		close_fd(fd_to);
-		print_error(98, "Error: Can't read from file %s\n", file_from);
 	}
 
 	close_fd(fd_from);
@@ -72,9 +76,10 @@ void copy_file(const char *file_from, const char *file_to)
 }
 
 /**
- * main - entry point for the cp program
+ * main - copies the content of a file to another file
  * @ac: argument count
  * @av: argument vector
+ *
  * Return: 0 on success
  */
 int main(int ac, char **av)
