@@ -3,22 +3,12 @@
 
 #define BUF_SIZE 1024
 
-/**
- * print_error - prints formatted error and exits
- * @code: exit code
- * @fmt: format string
- * @arg: argument for format
- */
-void print_error(int code, const char *fmt, const char *arg)
+void print_error(int code, const char *msg, const char *arg)
 {
-	dprintf(STDERR_FILENO, fmt, arg);
+	dprintf(STDERR_FILENO, msg, arg);
 	exit(code);
 }
 
-/**
- * safe_close - safely close fd
- * @fd: file descriptor
- */
 void safe_close(int fd)
 {
 	if (close(fd) == -1)
@@ -28,17 +18,10 @@ void safe_close(int fd)
 	}
 }
 
-/**
- * main - copies content of a file to another file
- * @ac: argument count
- * @av: argument vector
- *
- * Return: 0 on success
- */
 int main(int ac, char **av)
 {
 	int fd_from, fd_to;
-	ssize_t rbytes, wbytes;
+	ssize_t r, w;
 	char buf[BUF_SIZE];
 
 	if (ac != 3)
@@ -58,23 +41,25 @@ int main(int ac, char **av)
 		print_error(99, "Error: Can't write to %s\n", av[2]);
 	}
 
-	while ((rbytes = read(fd_from, buf, BUF_SIZE)) > 0)
+	while (1)
 	{
-		wbytes = write(fd_to, buf, rbytes);
-		if (wbytes == -1 || wbytes != rbytes)
+		r = read(fd_from, buf, BUF_SIZE);
+		if (r == -1)
+		{
+			safe_close(fd_from);
+			safe_close(fd_to);
+			print_error(98, "Error: Can't read from file %s\n", av[1]);
+		}
+		if (r == 0)
+			break;
+
+		w = write(fd_to, buf, r);
+		if (w == -1 || w != r)
 		{
 			safe_close(fd_from);
 			safe_close(fd_to);
 			print_error(99, "Error: Can't write to %s\n", av[2]);
 		}
-	}
-
-	/* تحقق من فشل read() بعد الحلقة مباشرة */
-	if (rbytes == -1)
-	{
-		safe_close(fd_from);
-		safe_close(fd_to);
-		print_error(98, "Error: Can't read from file %s\n", av[1]);
 	}
 
 	safe_close(fd_from);
