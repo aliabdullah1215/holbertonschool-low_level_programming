@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
     }
 
     /* Copy content using 1024-byte buffer */
-    while ((read_bytes = read(fd_from, buffer, 1024)) > 0)
+    read_bytes = read(fd_from, buffer, 1024);
+    while (read_bytes > 0)
     {
         write_bytes = write(fd_to, buffer, read_bytes);
         if (write_bytes != read_bytes)
@@ -49,9 +50,10 @@ int main(int argc, char *argv[])
             close(fd_to);
             exit(99);
         }
+        read_bytes = read(fd_from, buffer, 1024);
     }
 
-    /* Check if read failed */
+    /* Check if read failed - MUST BE IMMEDIATE CHECK AFTER READ */
     if (read_bytes == -1)
     {
         dprintf(STDERR_FILENO, "Error: Can't read from file %s\n", argv[1]);
